@@ -1,11 +1,11 @@
 import random
 
-
 def print_board(board):
     print("  1   2   3")
     print("  " + "-" * 11)
 
     for i, row in enumerate(board, 1):
+        # Преобразуем строку доски для отображения
         row_display = []
         for cell in row:
             if cell == "X":
@@ -15,24 +15,22 @@ def print_board(board):
             else:
                 row_display.append(" ")
 
-        print(f"{i}| {row_display[0]} | {row_display[1]} | {row_display[2]} |")
+        print(f"{i}  {row_display[0]} | {row_display[1]} | {row_display[2]} ")
         if i < 3:
             print("  " + "-" * 11)
 
-
-def get_symbol(symbol):
-    return symbol
-
-
 def check_winner(board):
+    # Проверка строк
     for row in board:
         if row[0] == row[1] == row[2] != " ":
             return row[0]
 
+    # Проверка столбцов
     for col in range(3):
         if board[0][col] == board[1][col] == board[2][col] != " ":
             return board[0][col]
 
+    # Проверка диагоналей
     if board[0][0] == board[1][1] == board[2][2] != " ":
         return board[0][0]
     if board[0][2] == board[1][1] == board[2][0] != " ":
@@ -40,112 +38,101 @@ def check_winner(board):
 
     return None
 
-
 def is_board_full(board):
     for row in board:
         if " " in row:
             return False
     return True
 
-
-def get_empty_cells(board):
-    empty_cells = []
-    for i in range(3):
-        for j in range(3):
-            if board[i][j] == " ":
-                empty_cells.append((i, j))
-    return empty_cells
-
-
-def computer_move(board, computer_symbol):
-    empty_cells = get_empty_cells(board)
-
-    for row, col in empty_cells:
-        board[row][col] = computer_symbol
-        if check_winner(board) == computer_symbol:
-            board[row][col] = " "
-            return row, col
-        board[row][col] = " "
-
-    player_symbol = "X" if computer_symbol == "O" else "O"
-    for row, col in empty_cells:
-        board[row][col] = player_symbol
-        if check_winner(board) == player_symbol:
-            board[row][col] = " "
-            return row, col
-        board[row][col] = " "
-
-    if (1, 1) in empty_cells:
-        return 1, 1
-
-    corners = [(0, 0), (0, 2), (2, 0), (2, 2)]
-    available_corners = [
-        corner for corner in corners if corner in empty_cells
+def play_game():
+    # Инициализация пустой доски
+    board = [
+        [" ", " ", " "],
+        [" ", " ", " "],
+        [" ", " ", " "]
     ]
-    if available_corners:
-        return random.choice(available_corners)
-
-    return random.choice(empty_cells)
-
-
-def play_with_friend():
-    board = [[" " for _ in range(3)] for _ in range(3)]
+    
     current_player = "X"
-
+    
     print("\n" + "=" * 40)
-    print("  РЕЖИМ: ИГРА С ДРУГОМ")
+    print("  КРЕСТИКИ-НОЛИКИ")
     print("=" * 40)
-    print(f"Игрок 1: X (Крестики)")
-    print(f"Игрок 2: O (Нолики)")
-
+    print("Игрок 1: X (Крестики)")
+    print("Игрок 2: O (Нолики)")
+    print("\n Как ходить: введите два числа (строка и столбец)")
+    print("Например: '2 3' для второй строки, третьего столбца")
+    print("=" * 40)
+    
     while True:
-        symbol = get_symbol(current_player)
-        print(f"\nСейчас ходит: Игрок [{symbol}]")
+        # Показываем доску
+        print(f"\n Ход игрока: {current_player}")
         print_board(board)
-
-        try:
-            coords = input("\nХод игрока (строка столбец): ").strip().split()
-
-            if len(coords) != 2:
-                print("Ошибка! Нужно ввести ДВА числа через пробел")
+        
+        # Получаем ход от игрока
+        while True:
+            try:
+                move = input(f"\nИгрок {current_player}, ваш ход (строка столбец): ").strip()
+                
+                if not move:
+                    print("Введите что-нибудь!")
+                    continue
+                    
+                # Разбиваем ввод
+                parts = move.split()
+                if len(parts) != 2:
+                    print("Нужно ввести ДВА числа через пробел!")
+                    continue
+                
+                row, col = int(parts[0]), int(parts[1])
+                
+                # Проверяем границы
+                if not (1 <= row <= 3) or not (1 <= col <= 3):
+                    print("Координаты должны быть от 1 до 3!")
+                    continue
+                
+                # Преобразуем в индексы массива
+                row_idx = row - 1
+                col_idx = col - 1
+                
+                # Проверяем, свободна ли клетка
+                if board[row_idx][col_idx] != " ":
+                    print("Эта клетка уже занята!")
+                    continue
+                
+                # Ход корректный
+                break
+                
+            except ValueError:
+                print("Ошибка! Введите числа, например: '2 3'")
                 continue
-
-            row, col = map(int, coords)
-
-            if not (1 <= row <= 3 and 1 <= col <= 3):
-                print("Ошибка! Координаты должны быть от 1 до 3")
-                continue
-
-            row -= 1
-            col -= 1
-
-            if board[row][col] != " ":
-                print("Эта клетка уже занята! Выберите другую.")
-                continue
-
-        except ValueError:
-            print("Ошибка! Введите числа, например: '2 3'")
-            continue
-
-        board[row][col] = current_player
-
+            except KeyboardInterrupt:
+                print("\nИгра прервана!")
+                return
+        
+        # Ставим символ на доску
+        board[row_idx][col_idx] = current_player
+        
+        # Проверяем победу
         winner = check_winner(board)
         if winner:
-            winner_symbol = get_symbol(winner)
             print_board(board)
-            print(f" Победа! Игрок [{winner_symbol}] выиграл! ")
+            print("\n" + "=" * 40)
+            print(f"  ПОБЕДА! Игрок {winner} выиграл!")
+            print("=" * 40)
             break
-
+        
+        # Проверяем ничью
         if is_board_full(board):
             print_board(board)
-            print(f" Ничья!")
+            print("\n" + "=" * 40)
+            print(f"  НИЧЬЯ!")
+            print("=" * 40)
             break
-
+        
+        # Меняем игрока
         current_player = "O" if current_player == "X" else "X"
 
-
-def play_with_computer():
-    board = [[" " for _ in range(3)] for _ in range(3)]
-
-    print("\n" + "=" * 40)
+# Запуск игры
+if __name__ == "__main__":
+    play_game()
 
